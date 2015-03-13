@@ -51,6 +51,7 @@ module RailsERD
         :title, true,
         :exclude, nil,
         :only, nil,
+        :examine, nil,
         :prepend_primary, false
       ]
     end

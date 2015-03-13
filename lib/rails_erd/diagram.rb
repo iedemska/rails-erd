@@ -149,80 +149,99 @@ module RailsERD
     end
 
     def filtered_entities
-     p "options"
+
+      p "options"
      options.each do |o|
        p o
      end
 
      main_array = @domain.entities
-     # Supporitng "only" option first
-     only_options_present = !options.only.nil?
+     # Supporitng "examine" option first
+     examine_options_present = !options.examine.nil?
 
      # Set of the specified objects to draw
-     only_options_array = if only_options_present 
-                           [options.only].flatten.map(&:to_sym)  
+     examine_options_array = if examine_options_present 
+                           [options.examine].flatten.map(&:to_sym)  
                          end
 
-     # Set of the related objects to draw
-     selected_from_only_array = if only_options_present
+    # Set of the related objects to draw
+     selected_from_examine_array = if examine_options_present
                         main_array.select do |entity|
-                          entity.name && entity_is_related?(entity, only_options_array)
+                          entity.name && entity_is_related?(entity, examine_options_array)
                         end
                        end
 
+ #    p selected_from_examine_array.length
 
      # Supporitng "exclude" option second
-     exclude_options_present = !options.exclude.nil?
+
+     exclude_options_present = !options.exclude.empty?
      exclude_options_array = if exclude_options_present 
                            [options.exclude].flatten.map(&:to_sym)  
                          end
-    
-     without_excluded_array = if exclude_options_present && only_options_present 
-                                    selected_from_only_array.reject do |entity|
+
+
+     without_excluded_array = if exclude_options_present && examine_options_present 
+                                    selected_from_examine_array.reject do |entity|
                                         entity.name && exclude_options_array.include?(entity.name.to_sym)
                                     end
-                              elsif exclude_options_present && !only_options_present
+                              elsif exclude_options_present && !examine_options_present
                                     main_array.reject do |entity|
                                         entity.name && exclude_options_array.include?(entity.name.to_sym)
                                     end
-                              elsif !exclude_options_present && only_options_present
-                                    selected_from_only_array
+                              elsif !exclude_options_present && examine_options_present
+                                    selected_from_examine_array
                               else
                                     main_array
                               end
-      
-  
-     ###################
+    
+
+    only_options_present = !options.only.empty?
+    only_options_array = if only_options_present 
+                           [options.only].flatten.map(&:to_sym)  
+                         end
+
+
+  return_array = if only_options_present
+                  without_excluded_array.select do |entity|
+                    entity.name && only_options_array.include?(entity.name.to_sym)
+                  end
+                 else
+                   p "returning without exclude"
+                   without_excluded_array
+                 end
+
+  ###################
      #old code
      ###################
+   #  p without_excluded_array.length
 
-     old_array = @domain.entities.reject { |entity|
-        options.exclude && entity.model && [options.exclude].flatten.include?(entity.name.to_sym) or
-        only_options_present && entity.name  && !only_options_array.include?(entity.name.to_sym) or
-        !options.inheritance && entity.specialized? or
-        !options.polymorphism && entity.generalized? or
-        !options.disconnected && entity.disconnected?
-      }.compact.tap do |entities|
-        raise "No entities found; create your models first!" if entities.empty?
-      end
-     ####################
-   
+#     old_array = main_array.reject { |entity|
+#        only_options_present && entity.name  && !only_options_array.include?(entity.name.to_sym) or
+#        !options.inheritance && entity.specialized? or
+#        !options.polymorphism && entity.generalized? or
+#        !options.disconnected && entity.disconnected?
+#      }.compact.tap do |entities|
+#        raise "No entities found; create your models first!" if entities.empty?
+#      end
+ 
+ ####################
  ###########################
     #DEBUG
    
-  @domain.relationships_by_entity_name("PayableInvoice").each do |r|
-   p " source name = #{r.source.name}, source model = #{r.source.model} destination name = #{r.destination.name} destination model #{r.destination.model}" 
-  end
-
- 
-  pai = @domain.entity_by_name("PayableInvoice")
-  p "specialiezed? #{pai.specialized?}"
-
-  p "@"*10
-  @domain.specializations_by_entity_name("PayableInvoice").each do |s|
-   p s.specialized.name
-   p s.generalized.name
-  end
+#  @domain.relationships_by_entity_name("PayableInvoice").each do |r|
+#   p " source name = #{r.source.name}, source model = #{r.source.model} destination name = #{r.destination.name} destination model #{r.destination.model}" 
+#  end
+#
+# 
+#  pai = @domain.entity_by_name("PayableInvoice")
+#  p "specialiezed? #{pai.specialized?}"
+#
+#  p "@"*10
+#  @domain.specializations_by_entity_name("PayableInvoice").each do |s|
+#   p s.specialized.name
+#   p s.generalized.name
+#  end
 #  require 'pry'; binding.pry
 #    p "="*30
 #  p "after"
@@ -234,12 +253,15 @@ module RailsERD
  #########################################
   #OUTPUT
   ##########################################
-      if !without_excluded_array.nil? 
-      p "=============new array"
-      without_excluded_array
-     else
-       old_array
-     end
+  #  if !without_excluded_array.nil? 
+  #    p "=============new array"
+  #    without_excluded_array
+  #   else
+  #     p "array was nil"
+  #     old_array
+  #   end
+
+      return_array
     end
     
     def entity_is_related?(entity, array)

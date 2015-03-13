@@ -52,6 +52,12 @@ Choice.options do
     desc "Filter to only include listed models in diagram."
   end
 
+  option :examine do
+    long "--examine"
+    desc "Draw all the relationships for the selected model."
+  end
+
+
   option :exclude do
     long "--exclude"
     desc "Filter to exclude listed models in diagram."
