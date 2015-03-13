@@ -150,10 +150,10 @@ module RailsERD
 
     def filtered_entities
 
-      p "options"
-     options.each do |o|
-       p o
-     end
+#      p "options"
+#     options.each do |o|
+#       p o
+#     end
 
      main_array = @domain.entities
      # Supporitng "examine" option first
@@ -207,7 +207,6 @@ module RailsERD
                     entity.name && only_options_array.include?(entity.name.to_sym)
                   end
                  else
-                   p "returning without exclude"
                    without_excluded_array
                  end
 
